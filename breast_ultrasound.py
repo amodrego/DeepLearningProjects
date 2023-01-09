@@ -129,6 +129,12 @@ cnn_model.add(tf.keras.layers.MaxPooling2D(2, 2))
 cnn_model.add(tf.keras.layers.Conv2D(128, kernel_size=3, activation='relu'))
 cnn_model.add(tf.keras.layers.MaxPooling2D(2, 2))
 
+cnn_model.add(tf.keras.layers.Conv2D(64, kernel_size=3, activation='relu'))
+cnn_model.add(tf.keras.layers.MaxPooling2D(2, 2))
+
+cnn_model.add(tf.keras.layers.Conv2D(32, kernel_size=3, activation='relu'))
+cnn_model.add(tf.keras.layers.MaxPooling2D(2, 2))
+
 cnn_model.add(tf.keras.layers.Flatten())
 
 cnn_model.add(tf.keras.layers.Dense(100, activation='relu'))
@@ -147,19 +153,19 @@ cnn_model.compile(optimizer='adam',
 # Añadimos aumento de datos para poder tener una mayor cantidad de imagenes 
 # con las que entrenar sin generar overfitting
 # =============================================================================
-from keras.preprocessing.image import ImageDataGenerator
+# from keras.preprocessing.image import ImageDataGenerator
 
-datagen = ImageDataGenerator(rotation_range=50, # El generador rotara las imagenes de manera aleatoria para aumentar el numero de imagenes disponibles
-                              width_shift_range=0.5, # Mover las imagenes en horizontal desde 0 hasta 1 
-                              height_shift_range=0.5, # Mover las imagenes en vertical
-                              shear_range=15, # Inclinar las imagenes
-                              zoom_range=[0.5, 1.5], # Permite hacer zoom en un rango a las imagenes
-                              vertical_flip=True, # Girar verticalmente las imagenes
-                              horizontal_flip=True, #  Girar horizontalmente las imagenes
+# datagen = ImageDataGenerator(rotation_range=50, # El generador rotara las imagenes de manera aleatoria para aumentar el numero de imagenes disponibles
+#                              width_shift_range=0.5, # Mover las imagenes en horizontal desde 0 hasta 1 
+#                              height_shift_range=0.5, # Mover las imagenes en vertical
+#                              shear_range=15, # Inclinar las imagenes
+#                              zoom_range=[0.5, 1.5], # Permite hacer zoom en un rango a las imagenes
+#                              vertical_flip=True, # Girar verticalmente las imagenes
+#                              horizontal_flip=True, #  Girar horizontalmente las imagenes
                              
-                              )
+#                              )
 
-datagen.fit(x_data)
+# datagen.fit(x_data)
 
 # Para poder ver unas cuantas imagenes del lote aumentado
 # for imagen, etiqueta in datagen.flow(x_data, y_data, batch_size=10, shuffle=False):
@@ -185,9 +191,9 @@ gc.collect()
 from sklearn.model_selection import train_test_split
 x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, train_size=0.85, shuffle=True) 
 
-datagen_train = datagen.flow(x_train, y_train, batch_size=32)
+# datagen_train = datagen.flow(x_train, y_train, batch_size=32)
 
-cnn_model.fit(datagen_train, batch_size=32, epochs=100,
+cnn_model.fit(x_train, y_train, batch_size=32, epochs=10,
               validation_data=(x_test, y_test),
               
               steps_per_epoch= int(np.ceil(len(x_train) / 32)), # np.ceil() redondea el float que tenemos al int inmediatamente superior (redondeo a las unidades)
