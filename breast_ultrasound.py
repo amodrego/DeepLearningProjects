@@ -4,9 +4,11 @@ Created on Thu Jan  5 12:43:21 2023
 
 @author: alexm
 
-RED NEURONAL BASADA EN IMAGENES DE ULTRASONIDOS DE MAMA. 
-ENTRENADA CON IMAGENES DE TUMORES BENIGNOS, MALIGNOS Y SIN TUMOR
 
+NEURAL NETWORK BASED IN BREAST ULTRASOUND IMAGES.
+IMAGES ARE CLASSIFIED IN 3 CATEGORIES: BENIGN, MALIGNANT AND NORMAL
+
+IMAGE DATASET OBTAINED FROM: 
 Al-Dhabyani W, Gomaa M, Khaled H, Fahmy A. Dataset of breast ultrasound images. Data in Brief. 2020 Feb;28:104863. DOI: 10.1016/j.dib.2019.104863.
 
 """
@@ -19,8 +21,7 @@ import pathlib
 
 
 # =============================================================================
-# Vectores que usaremos para almacenar las imagenes (x) 
-# y las etiquetas de cada categoria (y) --> benign, malign y normal
+# Variables where images (x) and labels (y) are saved --> benign, malign y normal
 # =============================================================================
 x_data = []
 y_data = []
@@ -31,7 +32,17 @@ y_data = []
 tamano_imagen = 300
 
 
-# Bucle para recuperar las imagenes de tumores benignos
+# While working withn the dataset in local the images are taken with 3 loops
+# from each directory and the label is added at the same time as the images are being saved by the model 
+# =============================================================================
+# The 3 possible situations are classified in numbers from 0 to 2 due to the
+# CNN cannot work with strings so:
+#    - 0 = Benign
+#    - 1 = Malignant
+#    - 2 = Normal
+# =============================================================================
+
+# Loop to save the benign images
 input_images_dir = 'benign/'
 files_names = os.listdir(input_images_dir)
 for i, image_path in enumerate(files_names):
@@ -63,7 +74,7 @@ for i, image_path in enumerate(files_names):
         
     
     
-# Bucle para recuperar las imagenes de tumores malignos
+# Loop to save the malignant images
 input_images_dir = 'malignant/'
 files_names = os.listdir(input_images_dir)
 for i, image_path in enumerate(files_names):
@@ -79,7 +90,7 @@ for i, image_path in enumerate(files_names):
 
 
 
-# Bucle para recuperar las imagenes sin tumor
+# Loop to save the normal images
 input_images_dir = 'normal/'
 files_names = os.listdir(input_images_dir)
 for i, image_path in enumerate(files_names):
@@ -96,26 +107,18 @@ for i, image_path in enumerate(files_names):
 
 
 # =============================================================================
-# Las 3 posibles situaciones se clasifican en numeros de 0-2 de forma que:
-#    - 0 = Benign
-#    - 1 = Malignant
-#    - 2 = Normal
+# Once we have the data in two different lists the data has to be normalized 
+# and lists converted into arrays 
 # =============================================================================
-
-
-# =============================================================================
-# Una vez tenemos los datos ya recuperados en dos listas distintas, se normalizan las
-# imagenes y se convierten las listas de datos en arrays 
-# =============================================================================
-# Normalizar los datos del vector de imagenes y convertir las imagenes a array
+# Normlaize the image vector data and convert in array
 x_data = np.array(x_data).astype(float) / 255
 y_data = np.array(y_data)
 
 
 
 # =============================================================================
-# Montamos la Red Neuronal Convolucional. 
-# Primero probamos sin aumento de datos y vemos como funciona
+# Convolutional Neural Network set up. 
+# Firs we try without data aumentation
 # =============================================================================
 import tensorflow as tf
 cnn_model = tf.keras.models.Sequential()
@@ -142,7 +145,9 @@ cnn_model.add(tf.keras.layers.Dense(3, activation='softmax'))
 
 
 # =============================================================================
-# Compilamos el modelo creado
+# Model compiling
+# Sparse categorical cross entropy is used because the output of the model can be 3
+# different numbers (0, 1, 2) and a binary cross entropy does not fit
 # =============================================================================
 cnn_model.compile(optimizer='adam',
                   loss= tf.keras.losses.SparseCategoricalCrossentropy(),
@@ -150,8 +155,7 @@ cnn_model.compile(optimizer='adam',
 
 
 # =============================================================================
-# Añadimos aumento de datos para poder tener una mayor cantidad de imagenes 
-# con las que entrenar sin generar overfitting
+# If we want to add data augmentation to have more images for training without having overfitting
 # =============================================================================
 # from keras.preprocessing.image import ImageDataGenerator
 
@@ -167,7 +171,7 @@ cnn_model.compile(optimizer='adam',
 
 # datagen.fit(x_data)
 
-# Para poder ver unas cuantas imagenes del lote aumentado
+# Code to see a batch of 25 images
 # for imagen, etiqueta in datagen.flow(x_data, y_data, batch_size=10, shuffle=False):
 
     # for i in range(10):
@@ -179,15 +183,15 @@ cnn_model.compile(optimizer='adam',
     # break
 
 
-# Limpiamos algo de memoria antes de entrenar el modelo
+# Clean up some memory before training
 import gc
 gc.collect()
 
 # =============================================================================
-# Entrenamiento del modelo
+# Model training
 # =============================================================================
 
-# Separamos en train y test (si hacemos aumento de datos es obligatorio hacerlo)
+# Train-Test split (if data augmentation is applied it is a must)
 from sklearn.model_selection import train_test_split
 x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, train_size=0.85, shuffle=True) 
 
@@ -196,7 +200,7 @@ x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, train_size=0
 cnn_model.fit(x_train, y_train, batch_size=32, epochs=10,
               validation_data=(x_test, y_test),
               
-              steps_per_epoch= int(np.ceil(len(x_train) / 32)), # np.ceil() redondea el float que tenemos al int inmediatamente superior (redondeo a las unidades)
+              steps_per_epoch= int(np.ceil(len(x_train) / 32)), # np.ceil() rounds the float to the immediatly superior
               validation_steps= int(np.ceil(len(x_test) / 32)),
               
               
